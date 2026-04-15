@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>瑞虎试驾登记</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family: "Microsoft YaHei",sans-serif}
+  body{background:#f5f7fa;padding:15px}
+  .main{max-width:420px;margin:0 auto;background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+  .title{text-align:center;color:#c8102e;font-size:22px;margin-bottom:18px}
+
+  .status{
+    padding:25px;
+    border-radius:12px;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+    margin-bottom:20px;
+  }
+  .in-use{
+    background:#1976D2 !important;
+    color:#fff !important;
+    border:2px solid #0d47a1;
+  }
+  .free{background:#e8f5e9;color:#2e7d32}
+
+  .car-info{
+    background:#f8f9fa;
+    padding:15px;
+    border-radius:8px;
+    margin:10px 0;
+    line-height:1.8;
+    font-size:16px;
+    border:1px solid #ddd;
+  }
+
+  input,button,select{
+    width:100%;
+    padding:14px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    margin:10px 0;
+    font-size:16px;
+  }
+  button{
+    background:#c8102f;
+    color:#fff;
+    border:none;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  .hide{display:none !important}
+
+  .history-btn{
+    position:fixed;
+    bottom:25px;
+    right:25px;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:#c8102f;
+    color:#fff;
+    font-size:26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:none;
+    box-shadow:0 3px 10px rgba(0,0,0,0.2);
+    z-index:100;
+    cursor:pointer;
+  }
+
+  .modal{
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.6);
+    z-index:200;
+    padding:15px;
+    display:none;
+  }
+  .modal.show{display:flex;align-items:center;justify-content:center}
+  .modal-card{
+    background:#fff;
+    width:100%;
+    max-width:420px;
+    border-radius:12px;
+    max-height:80vh;
+    overflow-y:auto;
+  }
+  .modal-header{
+    padding:15px;
+    border-bottom:1px solid #eee;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .modal-body{padding:15px;}
+  .record-item{
+    padding:12px 10px;
+    border-bottom:1px solid #eee;
+    font-size:14px;
+    line-height:1.6;
+  }
+  .empty-tip{text-align:center;color:#999;padding:20px 0}
+
+  #backBtn{
+    display:block;
+    width:100%;
+    padding:14px;
+    background:#666;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    margin:10px 0;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+
+  .del-btn{
+    background:#ff4444;
+    color:#fff;
+    border:none;
+    padding:4px 8px;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:12px;
+    margin-top:6px;
+  }
+
+  .car-tab{
+    display:flex;
+    gap:6px;
+    margin-bottom:10px;
+  }
+  .car-tab button{
+    margin:0;
+    padding:8px 6px;
+    font-size:12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="main">
+  <h1 class="title">瑞虎试驾登记</h1>
+  <div id="status" class="status free">车辆空闲</div>
+
+  <div id="currentInfo" class="car-info hide">
+    <div id="showCar"></div>
+    <div id="showName"></div>
+    <div id="showUse"></div>
+    <div id="showKm"></div>
+    <div id="showTime" style="color:#666"></div>
+  </div>
+
+  <div id="borrowArea">
+    <select id="carType">
+      <option value="">请选择车型</option>
+      <option value="瑞虎9">瑞虎9</option>
+      <option value="新瑞虎9">新瑞虎9</option>
+      <option value="第五代瑞虎8">第五代瑞虎8</option>
+      <option value="艾瑞泽8">艾瑞泽8</option>
+    </select>
+
+    <input type="text" id="name" placeholder="请输入姓名">
+    <input type="text" id="use" placeholder="用途（试驾/公务等）">
+    <input type="number" id="startKm" placeholder="借车公里数">
+    <button id="startBtn">确认借车</button>
+  </div>
+
+  <div id="returnArea" class="hide">
+    <input type="number" id="endKm" placeholder="归还公里数">
+    <button id="confirmReturn">确认归还</button>
+  </div>
+</div>
+
+<button class="history-btn" id="historyBtn">📋</button>
+
+<div id="historyModal" class="modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>使用记录</h3>
+      <button id="closeModalBtn" style="font-size:24px;border:none;background:none;cursor:pointer">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="car-tab">
+        <button onclick="renderHistory('all')">全部</button>
+        <button onclick="renderHistory('瑞虎9')">瑞虎9</button>
+        <button onclick="renderHistory('新瑞虎9')">新瑞虎9</button>
+        <button onclick="renderHistory('第五代瑞虎8')">瑞虎8</button>
+        <button onclick="renderHistory('艾瑞泽8')">艾瑞泽8</button>
+      </div>
+      <div id="recordList">
+        <div class="empty-tip">暂无记录</div>
+      </div>
+    </div>
+    <button id="backBtn">返回主界面</button>
+  </div>
+</div>
+
+<script>
+// ====================== 【删除密码】 ======================
+const ADMIN_PASSWORD = "123456";
+// ===========================================================
+
+const KEY_CURRENT = "ruihu9_current_v5";
+const KEY_HISTORY = "ruihu9_history_v5";
+
+let els = {};
+let currentCarFilter = 'all';
+
+function initEls() {
+  els = {
+    status: document.getElementById('status'),
+    currentInfo: document.getElementById('currentInfo'),
+    borrowArea: document.getElementById('borrowArea'),
+    returnArea: document.getElementById('returnArea'),
+    carType: document.getElementById('carType'),
+    name: document.getElementById('name'),
+    use: document.getElementById('use'),
+    startKm: document.getElementById('startKm'),
+    startBtn: document.getElementById('startBtn'),
+    endKm: document.getElementById('endKm'),
+    confirmReturn: document.getElementById('confirmReturn'),
+    historyBtn: document.getElementById('historyBtn'),
+    closeModalBtn: document.getElementById('closeModalBtn'),
+    backBtn: document.getElementById('backBtn'),
+    historyModal: document.getElementById('historyModal'),
+    recordList: document.getElementById('recordList'),
+    showCar: document.getElementById('showCar'),
+    showName: document.getElementById('showName'),
+    showUse: document.getElementById('showUse'),
+    showKm: document.getElementById('showKm'),
+    showTime: document.getElementById('showTime')
+  };
+}
+
+function now() {
+  return new Date().toLocaleString('zh-CN');
+}
+
+function getCurrent() {
+  try {
+    return JSON.parse(localStorage.getItem(KEY_CURRENT) || 'null');
+  } catch (e) {
+    localStorage.removeItem(KEY_CURRENT);
+    return null;
+  }
+}
+function setCurrent(obj) {
+  localStorage.setItem(KEY_CURRENT, JSON.stringify(obj));
+}
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(KEY_HISTORY) || '[]');
+  } catch (e) { return []; }
+}
+function saveHistory(list) {
+  localStorage.setItem(KEY_HISTORY, JSON.stringify(list));
+}
+function addHistory(r) {
+  let list = getHistory();
+  list.unshift(r);
+  saveHistory(list);
+}
+function clearCurrent() {
+  localStorage.removeItem(KEY_CURRENT);
+}
+
+function deleteRecord(index) {
+  let input = prompt("请输入管理员密码：");
+  if (input !== ADMIN_PASSWORD) {
+    alert("密码错误，无法删除！");
+    return;
+  }
+  let list = getHistory();
+  list.splice(index, 1);
+  saveHistory(list);
+  renderHistory(currentCarFilter);
+  alert("删除成功");
+}
+
+function renderPage() {
+  let cur = getCurrent();
+  if (cur && cur.inUse) {
+    els.status.className = 'status in-use';
+    els.status.innerText = '使用中';
+    els.currentInfo.classList.remove('hide');
+    els.borrowArea.classList.add('hide');
+    els.returnArea.classList.remove('hide');
+    els.showCar.innerText = '车型：' + cur.carType;
+    els.showName.innerText = '姓名：' + cur.name;
+    els.showUse.innerText = '用途：' + cur.use;
+    els.showKm.innerText = '借车里程：' + cur.startKm + ' km';
+    els.showTime.innerText = '借车时间：' + cur.startTime;
+  } else {
+    els.status.className = 'status free';
+    els.status.innerText = '车辆空闲';
+    els.currentInfo.classList.add('hide');
+    els.borrowArea.classList.remove('hide');
+    els.returnArea.classList.add('hide');
+  }
+}
+
+function renderHistory(filter) {
+  currentCarFilter = filter;
+  let list = getHistory();
+  if (filter !== 'all') {
+    list = list.filter(item => item.carType === filter);
+  }
+  els.recordList.innerHTML = '';
+  if (list.length === 0) {
+    els.recordList.innerHTML = '<div class="empty-tip">暂无记录</div>';
+    return;
+  }
+  let html = '';
+  list.forEach((item, i) => {
+    let s = new Date(item.startTime);
+    let e = item.endTime ? new Date(item.endTime) : new Date();
+    let ms = e - s;
+    let h = Math.floor(ms / 3600000);
+    let m = Math.floor((ms % 3600000) / 60000);
+    let dur = h + '小时' + m + '分钟';
+    let usedKm = Number(item.endKm || 0) - Number(item.startKm || 0);
+
+    html += `
+    <div class="record-item">
+      <div>NO.${i+1} 车型：${item.carType}</div>
+      <div>使用者：${item.name}</div>
+      <div>用途：${item.use}</div>
+      <div>借车：${item.startTime}</div>
+      <div>还车：${item.endTime || '未归还'}</div>
+      <div>时长：${dur}</div>
+      <div style="color:#c8102f;font-weight:bold;">行驶里程：${usedKm} km</div>
+      <button class="del-btn" onclick="deleteRecord(${i})">删除</button>
+    </div>`;
+  });
+  els.recordList.innerHTML = html;
+}
+
+function openModal() {
+  renderHistory('all');
+  els.historyModal.classList.add('show');
+}
+function closeModal() {
+  els.historyModal.classList.remove('show');
+}
+
+function onStart() {
+  let car = els.carType.value.trim();
+  let name = els.name.value.trim();
+  let use = els.use.value.trim();
+  let km = els.startKm.value.trim();
+
+  if (!car || !name || !use || !km) {
+    alert('请填写完整信息！');
+    return;
+  }
+
+  setCurrent({
+    carType: car,
+    name: name,
+    use: use,
+    startKm: km,
+    startTime: now(),
+    inUse: true
+  });
+
+  els.carType.value = '';
+  els.name.value = '';
+  els.use.value = '';
+  els.startKm.value = '';
+
+  renderPage();
+  alert('借车成功！');
+}
+
+function onReturn() {
+  let km = els.endKm.value.trim();
+  if (!km) {
+    alert('请填写归还公里数');
+    return;
+  }
+  let cur = getCurrent();
+  if (!cur) return;
+
+  cur.endKm = km;
+  cur.endTime = now();
+  cur.inUse = false;
+
+  addHistory(cur);
+  clearCurrent();
+  renderPage();
+  alert('归还成功！');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initEls();
+  els.startBtn.onclick = onStart;
+  els.confirmReturn.onclick = onReturn;
+  els.historyBtn.onclick = openModal;
+  els.closeModalBtn.onclick = closeModal;
+  els.backBtn.onclick = closeModal;
+  els.historyModal.onclick = (e) => {
+    if (e.target === els.historyModal) closeModal();
+  };
+  renderPage();
+});
+</script>
+</body>
+</html>
