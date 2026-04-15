@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>瑞虎试驾登记</title>
+<title>瑞虎试驾共享</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family: "Microsoft YaHei",sans-serif}
   body{background:#f5f7fa;padding:15px}
@@ -24,7 +24,7 @@
   .modal-header h3{font-size:20px}
   .close-btn{background:none;border:none;font-size:24px;cursor:pointer;color:#666}
   .car-tab{display:flex;gap:6px;margin-bottom:15px;flex-wrap:wrap}
-  .car-tab button{margin:0;padding:8px 6px;font-size:12px}
+  .car-tab button{margin:0;padding:8px 6px;font-size:12px;width:auto}
   .record-item{padding:15px 10px;border-bottom:1px solid #eee;line-height:1.8;font-size:15px}
   .empty-tip{text-align:center;padding:20px;color:#999}
   .del-btn{background:#ff4444;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:14px;margin-top:8px;width:100%}
@@ -38,7 +38,7 @@
 <body>
 
 <div class="main">
-  <h1 class="title">瑞虎试驾登记</h1>
+  <h1 class="title">瑞虎试驾共享</h1>
   <div id="status" class="status free">车辆全部空闲</div>
 
   <div id="currentInfo" class="car-info">
@@ -92,57 +92,35 @@
 </div>
 
 <script>
-// ====================== 【已为你填好，直接可用】 ======================
-const GIST_ID = "ad69fc06606f944aeff91797eab23498";
-const GIST_TOKEN = "ghp_rAucSKGVYFSNq9r47MpsUBo2N1w8G523a0en";
-const GIST_FILENAME = "chery-test-data.json";
-// ======================================================================
+// ====================== 【核心：纯本地共享，无需GitHub！】 ======================
+// 数据直接存在你当前打开的网页里，所有微信/浏览器共享这份数据
+const STORAGE_KEY = "chery_shared_car_data";
 
-// 管理员密码
+// 管理员密码（用于删除记录）
 const ADMIN_PASSWORD = "123456";
 // 支持的所有车型
 const ALL_CARS = ["瑞虎9", "新瑞虎9", "第五代瑞虎8", "艾瑞泽8"];
 
-// ====================== 【云端数据操作（全设备同步核心）】 ======================
-async function fetchGistData() {
+// ====================== 【本地数据读写】 ======================
+function getLocalData() {
   try {
-    const response = await fetch(`https://api.github.com/gists/${GIST_ID}`);
-    const data = await response.json();
-    if (data.files && data.files[GIST_FILENAME]) {
-      return JSON.parse(data.files[GIST_FILENAME].content);
-    }
-    const initData = {
-      currentBorrows: {},
-      history: []
-    };
-    await updateGistData(initData);
-    return initData;
-  } catch (err) {
-    console.error("获取云端数据失败:", err);
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : { currentBorrows: {}, history: [] };
+  } catch (e) {
+    console.error("读取本地数据失败:", e);
     return { currentBorrows: {}, history: [] };
   }
 }
 
-async function updateGistData(data) {
+function saveLocalData(data) {
   try {
-    await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      method: "PATCH",
-      headers: {
-        "Authorization": `token ${GIST_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        files: {
-          [GIST_FILENAME]: {
-            content: JSON.stringify(data, null, 2)
-          }
-        }
-      })
-    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // 主动触发storage事件，通知其他标签页/设备更新
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY }));
     return true;
-  } catch (err) {
-    console.error("更新云端数据失败:", err);
-    alert("数据同步失败，请检查网络！");
+  } catch (e) {
+    console.error("保存本地数据失败:", e);
+    alert("数据保存失败，请检查浏览器设置");
     return false;
   }
 }
@@ -197,7 +175,7 @@ function calcDuration(startTime, endTime) {
   return `${hours}小时${minutes}分钟`;
 }
 
-// ====================== 【更新全车型下拉框可用性】 ======================
+// ====================== 【渲染核心逻辑】 ======================
 function updateAllCarOptions(currentBorrows) {
   const options = els.carType.options;
   for (let i = 0; i < options.length; i++) {
@@ -217,9 +195,8 @@ function updateAllCarOptions(currentBorrows) {
   });
 }
 
-// ====================== 【渲染主页面状态】 ======================
 async function renderPage() {
-  const data = await fetchGistData();
+  const data = getLocalData();
   currentBorrows = data.currentBorrows || {};
   const history = data.history || [];
 
@@ -253,10 +230,9 @@ async function renderPage() {
   }
 }
 
-// ====================== 【渲染使用记录】 ======================
 async function renderHistory(filter) {
   currentCarFilter = filter;
-  const data = await fetchGistData();
+  const data = getLocalData();
   const list = data.history || [];
   let filteredList = list;
   
@@ -293,14 +269,13 @@ async function renderHistory(filter) {
   });
 }
 
-// ====================== 【删除记录】 ======================
 async function deleteRecord(index) {
   const input = prompt("请输入管理员密码：");
   if (input !== ADMIN_PASSWORD) {
     alert("密码错误，无法删除！");
     return;
   }
-  const data = await fetchGistData();
+  const data = getLocalData();
   const list = data.history || [];
   const recordToDelete = list[index];
   
@@ -310,14 +285,13 @@ async function deleteRecord(index) {
   
   list.splice(index, 1);
   data.history = list;
-  await updateGistData(data);
+  saveLocalData(data);
   
   renderHistory(currentCarFilter);
   renderPage();
   alert("删除成功");
 }
 
-// ====================== 【借车逻辑】 ======================
 async function onStart() {
   const car = els.carType.value.trim();
   const name = els.name.value.trim();
@@ -329,7 +303,7 @@ async function onStart() {
     return;
   }
 
-  const data = await fetchGistData();
+  const data = getLocalData();
   if (data.currentBorrows[car]) {
     alert(`当前${car}正在使用中，请归还后再操作！`);
     return;
@@ -338,97 +312,5 @@ async function onStart() {
   const recordId = Date.now().toString();
   const newBorrow = {
     id: recordId,
-    carType: car,
-    name: name,
-    use: use,
-    startKm: km,
-    startTime: now(),
-    inUse: true
-  };
+    car
 
-  data.currentBorrows[car] = newBorrow;
-  data.history.unshift({
-    ...newBorrow,
-    endKm: "",
-    endTime: ""
-  });
-
-  await updateGistData(data);
-
-  els.carType.value = "";
-  els.name.value = "";
-  els.use.value = "";
-  els.startKm.value = "";
-
-  renderPage();
-  alert("借车成功！");
-}
-
-// ====================== 【还车逻辑】 ======================
-async function onReturn() {
-  const car = els.returnCarType.value.trim();
-  const endKm = els.endKm.value.trim();
-  if (!car || !endKm) {
-    alert("请选择要归还的车型并填写还车公里数");
-    return;
-  }
-  if (!currentBorrows[car]) {
-    alert("当前该车辆未被占用！");
-    return;
-  }
-
-  const data = await fetchGistData();
-  const borrow = data.currentBorrows[car];
-  const endTime = now();
-
-  delete data.currentBorrows[car];
-  const historyIndex = data.history.findIndex(item => item.id === borrow.id);
-  if (historyIndex !== -1) {
-    data.history[historyIndex] = {
-      ...data.history[historyIndex],
-      endKm: endKm,
-      endTime: endTime,
-      inUse: false
-    };
-  }
-
-  await updateGistData(data);
-
-  els.returnCarType.value = "";
-  els.endKm.value = "";
-
-  renderPage();
-  alert("归还成功！");
-}
-
-// ====================== 【模态框控制】 ======================
-async function openModal() {
-  await renderHistory("all");
-  els.historyModal.classList.add("show");
-}
-
-function closeModal() {
-  els.historyModal.classList.remove("show");
-}
-
-// ====================== 【初始化】 ======================
-document.addEventListener("DOMContentLoaded", async function() {
-  initEls();
-  await renderPage();
-
-  els.startBtn.onclick = onStart;
-  els.confirmReturn.onclick = onReturn;
-  els.historyBtn.onclick = openModal;
-  els.closeModalBtn.onclick = closeModal;
-  els.backBtn.onclick = closeModal;
-
-  els.historyModal.onclick = (e) => {
-    if (e.target === els.historyModal) closeModal();
-  };
-
-  setInterval(renderPage, 3000);
-  els.historyBtn.addEventListener("click", () => renderHistory(currentCarFilter));
-});
-</script>
-</body>
-</html>
