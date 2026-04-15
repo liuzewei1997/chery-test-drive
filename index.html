@@ -29,25 +29,20 @@
   .empty-tip{text-align:center;padding:20px;color:#999}
   .del-btn{background:#ff4444;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:14px;margin-top:8px;width:100%}
   .back-btn{width:100%;padding:14px;background:#666;color:#fff;border:none;border-radius:8px;margin-top:15px;font-size:16px;cursor:pointer}
-  /* 新增：不可点击车型样式 */
   select option:disabled{background:#ff4444;color:#fff;cursor:not-allowed}
-  /* 新增：使用中/未归还样式 */
   .status-in-use{color:#2e7d32;font-weight:bold}
   .status-unreturned{color:#c8102e;font-weight:bold}
+  .loading{text-align:center;padding:20px;color:#666}
 </style>
 </head>
 <body>
 
 <div class="main">
   <h1 class="title">瑞虎试驾登记</h1>
-  <div id="status" class="status free">车辆空闲</div>
+  <div id="status" class="status free">车辆全部空闲</div>
 
   <div id="currentInfo" class="car-info">
-    <div id="showCar"></div>
-    <div id="showName"></div>
-    <div id="showUse"></div>
-    <div id="showKm"></div>
-    <div id="showTime" style="color:#666"></div>
+    <div id="showCarList"></div>
   </div>
 
   <div id="borrowArea">
@@ -66,6 +61,9 @@
   </div>
 
   <div id="returnArea" class="hide">
+    <select id="returnCarType">
+      <option value="">请选择要归还的车型</option>
+    </select>
     <input type="number" id="endKm" placeholder="还车公里数">
     <button id="confirmReturn">确认还车</button>
   </div>
@@ -87,84 +85,72 @@
       <button onclick="renderHistory('艾瑞泽8')">艾瑞泽8</button>
     </div>
     <div id="recordList">
-      <div class="empty-tip">暂无记录</div>
+      <div class="loading">加载中...</div>
     </div>
     <button class="back-btn" id="backBtn">返回主界面</button>
   </div>
 </div>
 
 <script>
-// ====================== 【管理员密码】 ======================
+// ====================== 【已为你填好，直接可用】 ======================
+const GIST_ID = "ad69fc06606f944aeff91797eab23498";
+const GIST_TOKEN = "ghp_rAucSKGVYFSNq9r47MpsUBo2N1w8G523a0en";
+const GIST_FILENAME = "chery-test-data.json";
+// ======================================================================
+
+// 管理员密码
 const ADMIN_PASSWORD = "123456";
-// ===========================================================
+// 支持的所有车型
+const ALL_CARS = ["瑞虎9", "新瑞虎9", "第五代瑞虎8", "艾瑞泽8"];
 
-// ====================== 【本地存储（数据共享）】 ======================
-// 用localStorage模拟共享存储，所有设备打开同一网址数据同步
-const STORAGE_KEY = "chery_test_drive_data";
-const CURRENT_BORROW_KEY = "chery_current_borrow";
-
-// 初始化数据
-function initData() {
-  if (!localStorage.getItem(STORAGE_KEY)) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-  }
-  if (!localStorage.getItem(CURRENT_BORROW_KEY)) {
-    localStorage.setItem(CURRENT_BORROW_KEY, JSON.stringify({ inUse: false }));
-  }
-}
-
-// 获取当前借车状态
-function getCurrentBorrow() {
-  return JSON.parse(localStorage.getItem(CURRENT_BORROW_KEY)) || { inUse: false };
-}
-
-// 更新当前借车状态
-function updateCurrentBorrow(data) {
-  localStorage.setItem(CURRENT_BORROW_KEY, JSON.stringify(data));
-  // 借车状态变化时，更新车型下拉框可用性
-  updateCarTypeOptions();
-}
-
-// 获取历史记录
-function getHistory() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-}
-
-// 添加历史记录
-function addHistory(record) {
-  const history = getHistory();
-  history.unshift(record);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-}
-
-// 更新历史记录（还车时）
-function updateHistory(recordId, updateData) {
-  const history = getHistory();
-  const index = history.findIndex(item => item.id === recordId);
-  if (index !== -1) {
-    history[index] = { ...history[index], ...updateData };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-  }
-}
-
-// ====================== 【新增：更新车型下拉框可用性】 ======================
-function updateCarTypeOptions() {
-  const current = getCurrentBorrow();
-  const carTypeSelect = document.getElementById("carType");
-  const options = carTypeSelect.options;
-  
-  // 遍历所有选项，瑞虎9被占用时禁用，否则启用
-  for (let i = 0; i < options.length; i++) {
-    if (options[i].value === "瑞虎9") {
-      options[i].disabled = current.inUse && current.carType === "瑞虎9";
+// ====================== 【云端数据操作（全设备同步核心）】 ======================
+async function fetchGistData() {
+  try {
+    const response = await fetch(`https://api.github.com/gists/${GIST_ID}`);
+    const data = await response.json();
+    if (data.files && data.files[GIST_FILENAME]) {
+      return JSON.parse(data.files[GIST_FILENAME].content);
     }
+    const initData = {
+      currentBorrows: {},
+      history: []
+    };
+    await updateGistData(initData);
+    return initData;
+  } catch (err) {
+    console.error("获取云端数据失败:", err);
+    return { currentBorrows: {}, history: [] };
+  }
+}
+
+async function updateGistData(data) {
+  try {
+    await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `token ${GIST_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        files: {
+          [GIST_FILENAME]: {
+            content: JSON.stringify(data, null, 2)
+          }
+        }
+      })
+    });
+    return true;
+  } catch (err) {
+    console.error("更新云端数据失败:", err);
+    alert("数据同步失败，请检查网络！");
+    return false;
   }
 }
 
 // ====================== 【DOM元素】 ======================
 let els = {};
 let currentCarFilter = "all";
-let currentBorrow = null;
+let currentBorrows = {};
 
 function initEls() {
   els = {
@@ -173,6 +159,7 @@ function initEls() {
     borrowArea: document.getElementById("borrowArea"),
     returnArea: document.getElementById("returnArea"),
     carType: document.getElementById("carType"),
+    returnCarType: document.getElementById("returnCarType"),
     name: document.getElementById("name"),
     use: document.getElementById("use"),
     startKm: document.getElementById("startKm"),
@@ -184,11 +171,7 @@ function initEls() {
     closeModalBtn: document.getElementById("closeModalBtn"),
     backBtn: document.getElementById("backBtn"),
     recordList: document.getElementById("recordList"),
-    showCar: document.getElementById("showCar"),
-    showName: document.getElementById("showName"),
-    showUse: document.getElementById("showUse"),
-    showKm: document.getElementById("showKm"),
-    showTime: document.getElementById("showTime")
+    showCarList: document.getElementById("showCarList")
   };
 }
 
@@ -204,7 +187,6 @@ function now() {
   return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
 }
 
-// 计算时长
 function calcDuration(startTime, endTime) {
   if (!endTime) return "使用中";
   const start = new Date(startTime);
@@ -215,41 +197,67 @@ function calcDuration(startTime, endTime) {
   return `${hours}小时${minutes}分钟`;
 }
 
-// ====================== 【渲染页面状态】 ======================
-async function renderPage() {
-  initData();
-  currentBorrow = getCurrentBorrow();
-  
-  // 更新车型下拉框可用性（核心新增）
-  updateCarTypeOptions();
+// ====================== 【更新全车型下拉框可用性】 ======================
+function updateAllCarOptions(currentBorrows) {
+  const options = els.carType.options;
+  for (let i = 0; i < options.length; i++) {
+    const carValue = options[i].value;
+    if (carValue === "") continue;
+    options[i].disabled = !!currentBorrows[carValue];
+  }
 
-  if (currentBorrow.inUse) {
-    // 车辆使用中
+  els.returnCarType.innerHTML = '<option value="">请选择要归还的车型</option>';
+  Object.keys(currentBorrows).forEach(car => {
+    if (currentBorrows[car]) {
+      const opt = document.createElement("option");
+      opt.value = car;
+      opt.textContent = car;
+      els.returnCarType.appendChild(opt);
+    }
+  });
+}
+
+// ====================== 【渲染主页面状态】 ======================
+async function renderPage() {
+  const data = await fetchGistData();
+  currentBorrows = data.currentBorrows || {};
+  const history = data.history || [];
+
+  updateAllCarOptions(currentBorrows);
+
+  const inUseCars = Object.keys(currentBorrows).filter(car => currentBorrows[car]);
+  if (inUseCars.length > 0) {
     els.status.className = "status in-use";
-    els.status.innerText = `${currentBorrow.carType} 使用中`;
+    els.status.innerText = `${inUseCars.length}台车辆使用中`;
+    let infoHtml = "";
+    inUseCars.forEach(car => {
+      const borrow = currentBorrows[car];
+      infoHtml += `
+        <div style="margin-bottom:10px;padding:10px;background:#f0f0f0;border-radius:6px;">
+          <div>车型：${car}</div>
+          <div>使用者：${borrow.name}</div>
+          <div>用途：${borrow.use}</div>
+          <div>借车里程：${borrow.startKm} km</div>
+          <div>借车时间：${borrow.startTime}</div>
+        </div>
+      `;
+    });
+    els.showCarList.innerHTML = infoHtml;
     els.currentInfo.style.display = "block";
-    els.borrowArea.classList.add("hide");
     els.returnArea.classList.remove("hide");
-    
-    els.showCar.innerText = `车型：${currentBorrow.carType}`;
-    els.showName.innerText = `使用者：${currentBorrow.name}`;
-    els.showUse.innerText = `用途：${currentBorrow.use}`;
-    els.showKm.innerText = `借车里程：${currentBorrow.startKm} km`;
-    els.showTime.innerText = `借车时间：${currentBorrow.startTime}`;
   } else {
-    // 车辆空闲
     els.status.className = "status free";
-    els.status.innerText = "车辆空闲";
+    els.status.innerText = "车辆全部空闲";
     els.currentInfo.style.display = "none";
-    els.borrowArea.classList.remove("hide");
     els.returnArea.classList.add("hide");
   }
 }
 
-// ====================== 【渲染历史记录（优化版）】 ======================
+// ====================== 【渲染使用记录】 ======================
 async function renderHistory(filter) {
   currentCarFilter = filter;
-  const list = getHistory();
+  const data = await fetchGistData();
+  const list = data.history || [];
   let filteredList = list;
   
   if (filter !== "all") {
@@ -266,7 +274,6 @@ async function renderHistory(filter) {
     const duration = calcDuration(item.startTime, item.endTime);
     const isReturned = !!item.endTime;
     
-    // 新增：未归还时的状态显示
     const endTimeText = isReturned ? item.endTime : '<span class="status-in-use">使用中</span>';
     const mileageText = isReturned ? `${item.endKm - item.startKm} km` : '<span class="status-unreturned">未归还</span>';
 
@@ -293,14 +300,18 @@ async function deleteRecord(index) {
     alert("密码错误，无法删除！");
     return;
   }
-  const list = getHistory();
+  const data = await fetchGistData();
+  const list = data.history || [];
   const recordToDelete = list[index];
-  // 如果删除的是当前使用中的记录，同步释放车辆
-  if (currentBorrow.inUse && currentBorrow.id === recordToDelete.id) {
-    updateCurrentBorrow({ inUse: false });
+  
+  if (currentBorrows[recordToDelete.carType] && currentBorrows[recordToDelete.carType].id === recordToDelete.id) {
+    delete data.currentBorrows[recordToDelete.carType];
   }
+  
   list.splice(index, 1);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  data.history = list;
+  await updateGistData(data);
+  
   renderHistory(currentCarFilter);
   renderPage();
   alert("删除成功");
@@ -318,10 +329,9 @@ async function onStart() {
     return;
   }
 
-  // 检查当前车辆是否被占用
-  const current = getCurrentBorrow();
-  if (current.inUse) {
-    alert(`当前${current.carType}正在使用中，请归还后再操作！`);
+  const data = await fetchGistData();
+  if (data.currentBorrows[car]) {
+    alert(`当前${car}正在使用中，请归还后再操作！`);
     return;
   }
 
@@ -336,16 +346,15 @@ async function onStart() {
     inUse: true
   };
 
-  // 更新当前借车状态
-  updateCurrentBorrow(newBorrow);
-  // 添加历史记录
-  addHistory({
+  data.currentBorrows[car] = newBorrow;
+  data.history.unshift({
     ...newBorrow,
     endKm: "",
     endTime: ""
   });
 
-  // 清空输入
+  await updateGistData(data);
+
   els.carType.value = "";
   els.name.value = "";
   els.use.value = "";
@@ -357,29 +366,35 @@ async function onStart() {
 
 // ====================== 【还车逻辑】 ======================
 async function onReturn() {
+  const car = els.returnCarType.value.trim();
   const endKm = els.endKm.value.trim();
-  if (!endKm) {
-    alert("请填写还车公里数");
+  if (!car || !endKm) {
+    alert("请选择要归还的车型并填写还车公里数");
     return;
   }
-  if (!currentBorrow || !currentBorrow.inUse) {
-    alert("当前无车辆在借！");
+  if (!currentBorrows[car]) {
+    alert("当前该车辆未被占用！");
     return;
   }
 
+  const data = await fetchGistData();
+  const borrow = data.currentBorrows[car];
   const endTime = now();
-  const mileage = endKm - currentBorrow.startKm;
 
-  // 更新当前借车状态为空闲
-  updateCurrentBorrow({ inUse: false });
-  // 更新历史记录
-  updateHistory(currentBorrow.id, {
-    endKm: endKm,
-    endTime: endTime,
-    inUse: false
-  });
+  delete data.currentBorrows[car];
+  const historyIndex = data.history.findIndex(item => item.id === borrow.id);
+  if (historyIndex !== -1) {
+    data.history[historyIndex] = {
+      ...data.history[historyIndex],
+      endKm: endKm,
+      endTime: endTime,
+      inUse: false
+    };
+  }
 
-  // 清空输入
+  await updateGistData(data);
+
+  els.returnCarType.value = "";
   els.endKm.value = "";
 
   renderPage();
@@ -387,8 +402,8 @@ async function onReturn() {
 }
 
 // ====================== 【模态框控制】 ======================
-function openModal() {
-  renderHistory("all");
+async function openModal() {
+  await renderHistory("all");
   els.historyModal.classList.add("show");
 }
 
@@ -399,23 +414,20 @@ function closeModal() {
 // ====================== 【初始化】 ======================
 document.addEventListener("DOMContentLoaded", async function() {
   initEls();
-  initData();
   await renderPage();
 
-  // 绑定事件
   els.startBtn.onclick = onStart;
   els.confirmReturn.onclick = onReturn;
   els.historyBtn.onclick = openModal;
   els.closeModalBtn.onclick = closeModal;
   els.backBtn.onclick = closeModal;
 
-  // 点击模态框外部关闭
   els.historyModal.onclick = (e) => {
     if (e.target === els.historyModal) closeModal();
   };
 
-  // 定时刷新页面状态（多设备同步）
   setInterval(renderPage, 3000);
+  els.historyBtn.addEventListener("click", () => renderHistory(currentCarFilter));
 });
 </script>
 </body>
