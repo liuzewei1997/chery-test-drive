@@ -8,137 +8,32 @@
   *{box-sizing:border-box;margin:0;padding:0;font-family: "Microsoft YaHei",sans-serif}
   body{background:#f5f7fa;padding:15px}
   .main{max-width:420px;margin:0 auto;background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
-  .title{text-align:center;color:#c8102e;font-size:22px;margin-bottom:18px}
-
-  .status{
-    padding:25px;
-    border-radius:12px;
-    text-align:center;
-    font-size:24px;
-    font-weight:bold;
-    margin-bottom:20px;
-  }
-  .in-use{
-    background:#1976D2 !important;
-    color:#fff !important;
-    border:2px solid #0d47a1;
-  }
-  .free{background:#e8f5e9;color:#2e7d32}
-
-  .car-info{
-    background:#f8f9fa;
-    padding:15px;
-    border-radius:8px;
-    margin:10px 0;
-    line-height:1.8;
-    font-size:16px;
-    border:1px solid #ddd;
-  }
-
-  input,button,select{
-    width:100%;
-    padding:14px;
-    border-radius:8px;
-    border:1px solid #ddd;
-    margin:10px 0;
-    font-size:16px;
-  }
-  button{
-    background:#c8102f;
-    color:#fff;
-    border:none;
-    font-weight:bold;
-    cursor:pointer;
-  }
+  .title{text-align:center;color:#c8102e;font-size:28px;margin-bottom:20px}
+  .status{padding:25px;border-radius:8px;text-align:center;font-size:26px;font-weight:bold;margin-bottom:20px}
+  .status.free{background:#e8f5e9;color:#2e7d32}
+  .status.in-use{background:#e3f2fd;color:#1565c0}
+  .car-info{background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px;line-height:1.8;font-size:16px;display:none}
+  input,button,select{width:100%;padding:14px;border-radius:8px;border:1px solid #ddd;margin:10px 0;font-size:16px}
+  button{background:#c8102e;color:#fff;border:none;font-weight:bold;cursor:pointer}
   .hide{display:none !important}
-
-  .history-btn{
-    position:fixed;
-    bottom:25px;
-    right:25px;
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    background:#c8102f;
-    color:#fff;
-    font-size:26px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border:none;
-    box-shadow:0 3px 10px rgba(0,0,0,0.2);
-    z-index:100;
-    cursor:pointer;
-  }
-
-  .modal{
-    position:fixed;
-    top:0;left:0;right:0;bottom:0;
-    background:rgba(0,0,0,0.6);
-    z-index:200;
-    padding:15px;
-    display:none;
-  }
-  .modal.show{display:flex;align-items:center;justify-content:center}
-  .modal-card{
-    background:#fff;
-    width:100%;
-    max-width:420px;
-    border-radius:12px;
-    max-height:80vh;
-    overflow-y:auto;
-  }
-  .modal-header{
-    padding:15px;
-    border-bottom:1px solid #eee;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-  }
-  .modal-body{padding:15px;}
-  .record-item{
-    padding:12px 10px;
-    border-bottom:1px solid #eee;
-    font-size:14px;
-    line-height:1.6;
-  }
-  .empty-tip{text-align:center;color:#999;padding:20px 0}
-
-  #backBtn{
-    display:block;
-    width:100%;
-    padding:14px;
-    background:#666;
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    margin:10px 0;
-    font-size:16px;
-    font-weight:bold;
-    cursor:pointer;
-  }
-
-  .del-btn{
-    background:#ff4444;
-    color:#fff;
-    border:none;
-    padding:4px 8px;
-    border-radius:4px;
-    cursor:pointer;
-    font-size:12px;
-    margin-top:6px;
-  }
-
-  .car-tab{
-    display:flex;
-    gap:6px;
-    margin-bottom:10px;
-  }
-  .car-tab button{
-    margin:0;
-    padding:8px 6px;
-    font-size:12px;
-  }
+  .history-btn{position:fixed;bottom:25px;right:25px;width:60px;height:60px;border-radius:50%;background:#c8102e;color:#fff;border:none;font-size:26px;cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center}
+  .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:200;display:none;align-items:center;justify-content:center}
+  .modal.show{display:flex}
+  .modal-card{background:#fff;width:90%;max-width:420px;border-radius:12px;max-height:80vh;overflow-y:auto;padding:20px}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+  .modal-header h3{font-size:20px}
+  .close-btn{background:none;border:none;font-size:24px;cursor:pointer;color:#666}
+  .car-tab{display:flex;gap:6px;margin-bottom:15px;flex-wrap:wrap}
+  .car-tab button{margin:0;padding:8px 6px;font-size:12px}
+  .record-item{padding:15px 10px;border-bottom:1px solid #eee;line-height:1.8;font-size:15px}
+  .empty-tip{text-align:center;padding:20px;color:#999}
+  .del-btn{background:#ff4444;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:14px;margin-top:8px;width:100%}
+  .back-btn{width:100%;padding:14px;background:#666;color:#fff;border:none;border-radius:8px;margin-top:15px;font-size:16px;cursor:pointer}
+  /* 新增：不可点击车型样式 */
+  select option:disabled{background:#ff4444;color:#fff;cursor:not-allowed}
+  /* 新增：使用中/未归还样式 */
+  .status-in-use{color:#2e7d32;font-weight:bold}
+  .status-unreturned{color:#c8102e;font-weight:bold}
 </style>
 </head>
 <body>
@@ -147,7 +42,7 @@
   <h1 class="title">瑞虎试驾登记</h1>
   <div id="status" class="status free">车辆空闲</div>
 
-  <div id="currentInfo" class="car-info hide">
+  <div id="currentInfo" class="car-info">
     <div id="showCar"></div>
     <div id="showName"></div>
     <div id="showUse"></div>
@@ -171,242 +66,356 @@
   </div>
 
   <div id="returnArea" class="hide">
-    <input type="number" id="endKm" placeholder="归还公里数">
-    <button id="confirmReturn">确认归还</button>
+    <input type="number" id="endKm" placeholder="还车公里数">
+    <button id="confirmReturn">确认还车</button>
   </div>
 </div>
 
 <button class="history-btn" id="historyBtn">📋</button>
 
-<div id="historyModal" class="modal">
+<div class="modal" id="historyModal">
   <div class="modal-card">
     <div class="modal-header">
       <h3>使用记录</h3>
-      <button id="closeModalBtn" style="font-size:24px;border:none;background:none;cursor:pointer">×</button>
+      <button class="close-btn" id="closeModalBtn">×</button>
     </div>
-    <div class="modal-body">
-      <div class="car-tab">
-        <button onclick="renderHistory('all')">全部</button>
-        <button onclick="renderHistory('瑞虎9')">瑞虎9</button>
-        <button onclick="renderHistory('新瑞虎9')">新瑞虎9</button>
-        <button onclick="renderHistory('第五代瑞虎8')">瑞虎8</button>
-        <button onclick="renderHistory('艾瑞泽8')">艾瑞泽8</button>
-      </div>
-      <div id="recordList">
-        <div class="empty-tip">暂无记录</div>
-      </div>
+    <div class="car-tab">
+      <button onclick="renderHistory('all')">全部</button>
+      <button onclick="renderHistory('瑞虎9')">瑞虎9</button>
+      <button onclick="renderHistory('新瑞虎9')">新瑞虎9</button>
+      <button onclick="renderHistory('第五代瑞虎8')">瑞虎8</button>
+      <button onclick="renderHistory('艾瑞泽8')">艾瑞泽8</button>
     </div>
-    <button id="backBtn">返回主界面</button>
+    <div id="recordList">
+      <div class="empty-tip">暂无记录</div>
+    </div>
+    <button class="back-btn" id="backBtn">返回主界面</button>
   </div>
 </div>
 
 <script>
-// ====================== 【删除密码】 ======================
+// ====================== 【管理员密码】 ======================
 const ADMIN_PASSWORD = "123456";
 // ===========================================================
 
-const KEY_CURRENT = "ruihu9_current_v5";
-const KEY_HISTORY = "ruihu9_history_v5";
+// ====================== 【本地存储（数据共享）】 ======================
+// 用localStorage模拟共享存储，所有设备打开同一网址数据同步
+const STORAGE_KEY = "chery_test_drive_data";
+const CURRENT_BORROW_KEY = "chery_current_borrow";
 
+// 初始化数据
+function initData() {
+  if (!localStorage.getItem(STORAGE_KEY)) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(CURRENT_BORROW_KEY)) {
+    localStorage.setItem(CURRENT_BORROW_KEY, JSON.stringify({ inUse: false }));
+  }
+}
+
+// 获取当前借车状态
+function getCurrentBorrow() {
+  return JSON.parse(localStorage.getItem(CURRENT_BORROW_KEY)) || { inUse: false };
+}
+
+// 更新当前借车状态
+function updateCurrentBorrow(data) {
+  localStorage.setItem(CURRENT_BORROW_KEY, JSON.stringify(data));
+  // 借车状态变化时，更新车型下拉框可用性
+  updateCarTypeOptions();
+}
+
+// 获取历史记录
+function getHistory() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+}
+
+// 添加历史记录
+function addHistory(record) {
+  const history = getHistory();
+  history.unshift(record);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+}
+
+// 更新历史记录（还车时）
+function updateHistory(recordId, updateData) {
+  const history = getHistory();
+  const index = history.findIndex(item => item.id === recordId);
+  if (index !== -1) {
+    history[index] = { ...history[index], ...updateData };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  }
+}
+
+// ====================== 【新增：更新车型下拉框可用性】 ======================
+function updateCarTypeOptions() {
+  const current = getCurrentBorrow();
+  const carTypeSelect = document.getElementById("carType");
+  const options = carTypeSelect.options;
+  
+  // 遍历所有选项，瑞虎9被占用时禁用，否则启用
+  for (let i = 0; i < options.length; i++) {
+    if (options[i].value === "瑞虎9") {
+      options[i].disabled = current.inUse && current.carType === "瑞虎9";
+    }
+  }
+}
+
+// ====================== 【DOM元素】 ======================
 let els = {};
-let currentCarFilter = 'all';
+let currentCarFilter = "all";
+let currentBorrow = null;
 
 function initEls() {
   els = {
-    status: document.getElementById('status'),
-    currentInfo: document.getElementById('currentInfo'),
-    borrowArea: document.getElementById('borrowArea'),
-    returnArea: document.getElementById('returnArea'),
-    carType: document.getElementById('carType'),
-    name: document.getElementById('name'),
-    use: document.getElementById('use'),
-    startKm: document.getElementById('startKm'),
-    startBtn: document.getElementById('startBtn'),
-    endKm: document.getElementById('endKm'),
-    confirmReturn: document.getElementById('confirmReturn'),
-    historyBtn: document.getElementById('historyBtn'),
-    closeModalBtn: document.getElementById('closeModalBtn'),
-    backBtn: document.getElementById('backBtn'),
-    historyModal: document.getElementById('historyModal'),
-    recordList: document.getElementById('recordList'),
-    showCar: document.getElementById('showCar'),
-    showName: document.getElementById('showName'),
-    showUse: document.getElementById('showUse'),
-    showKm: document.getElementById('showKm'),
-    showTime: document.getElementById('showTime')
+    status: document.getElementById("status"),
+    currentInfo: document.getElementById("currentInfo"),
+    borrowArea: document.getElementById("borrowArea"),
+    returnArea: document.getElementById("returnArea"),
+    carType: document.getElementById("carType"),
+    name: document.getElementById("name"),
+    use: document.getElementById("use"),
+    startKm: document.getElementById("startKm"),
+    startBtn: document.getElementById("startBtn"),
+    endKm: document.getElementById("endKm"),
+    confirmReturn: document.getElementById("confirmReturn"),
+    historyBtn: document.getElementById("historyBtn"),
+    historyModal: document.getElementById("historyModal"),
+    closeModalBtn: document.getElementById("closeModalBtn"),
+    backBtn: document.getElementById("backBtn"),
+    recordList: document.getElementById("recordList"),
+    showCar: document.getElementById("showCar"),
+    showName: document.getElementById("showName"),
+    showUse: document.getElementById("showUse"),
+    showKm: document.getElementById("showKm"),
+    showTime: document.getElementById("showTime")
   };
 }
 
+// ====================== 【工具函数】 ======================
 function now() {
-  return new Date().toLocaleString('zh-CN');
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hour = String(d.getHours()).padStart(2, "0");
+  const minute = String(d.getMinutes()).padStart(2, "0");
+  const second = String(d.getSeconds()).padStart(2, "0");
+  return `${year}/${month}/${day} ${hour}:${minute}:${second}`;
 }
 
-function getCurrent() {
-  try {
-    return JSON.parse(localStorage.getItem(KEY_CURRENT) || 'null');
-  } catch (e) {
-    localStorage.removeItem(KEY_CURRENT);
-    return null;
+// 计算时长
+function calcDuration(startTime, endTime) {
+  if (!endTime) return "使用中";
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const diff = end - start;
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  return `${hours}小时${minutes}分钟`;
+}
+
+// ====================== 【渲染页面状态】 ======================
+async function renderPage() {
+  initData();
+  currentBorrow = getCurrentBorrow();
+  
+  // 更新车型下拉框可用性（核心新增）
+  updateCarTypeOptions();
+
+  if (currentBorrow.inUse) {
+    // 车辆使用中
+    els.status.className = "status in-use";
+    els.status.innerText = `${currentBorrow.carType} 使用中`;
+    els.currentInfo.style.display = "block";
+    els.borrowArea.classList.add("hide");
+    els.returnArea.classList.remove("hide");
+    
+    els.showCar.innerText = `车型：${currentBorrow.carType}`;
+    els.showName.innerText = `使用者：${currentBorrow.name}`;
+    els.showUse.innerText = `用途：${currentBorrow.use}`;
+    els.showKm.innerText = `借车里程：${currentBorrow.startKm} km`;
+    els.showTime.innerText = `借车时间：${currentBorrow.startTime}`;
+  } else {
+    // 车辆空闲
+    els.status.className = "status free";
+    els.status.innerText = "车辆空闲";
+    els.currentInfo.style.display = "none";
+    els.borrowArea.classList.remove("hide");
+    els.returnArea.classList.add("hide");
   }
 }
-function setCurrent(obj) {
-  localStorage.setItem(KEY_CURRENT, JSON.stringify(obj));
-}
-function getHistory() {
-  try {
-    return JSON.parse(localStorage.getItem(KEY_HISTORY) || '[]');
-  } catch (e) { return []; }
-}
-function saveHistory(list) {
-  localStorage.setItem(KEY_HISTORY, JSON.stringify(list));
-}
-function addHistory(r) {
-  let list = getHistory();
-  list.unshift(r);
-  saveHistory(list);
-}
-function clearCurrent() {
-  localStorage.removeItem(KEY_CURRENT);
+
+// ====================== 【渲染历史记录（优化版）】 ======================
+async function renderHistory(filter) {
+  currentCarFilter = filter;
+  const list = getHistory();
+  let filteredList = list;
+  
+  if (filter !== "all") {
+    filteredList = list.filter(item => item.carType === filter);
+  }
+
+  els.recordList.innerHTML = "";
+  if (filteredList.length === 0) {
+    els.recordList.innerHTML = '<div class="empty-tip">暂无记录</div>';
+    return;
+  }
+
+  filteredList.forEach((item, i) => {
+    const duration = calcDuration(item.startTime, item.endTime);
+    const isReturned = !!item.endTime;
+    
+    // 新增：未归还时的状态显示
+    const endTimeText = isReturned ? item.endTime : '<span class="status-in-use">使用中</span>';
+    const mileageText = isReturned ? `${item.endKm - item.startKm} km` : '<span class="status-unreturned">未归还</span>';
+
+    const html = `
+      <div class="record-item">
+        <div>NO.${i+1} 车型：${item.carType}</div>
+        <div>使用者：${item.name}</div>
+        <div>用途：${item.use}</div>
+        <div>借车：${item.startTime}</div>
+        <div>还车：${endTimeText}</div>
+        <div>时长：${duration}</div>
+        <div style="color:#c8102e;font-weight:bold;">行驶里程：${mileageText}</div>
+        <button class="del-btn" onclick="deleteRecord(${i})">删除</button>
+      </div>
+    `;
+    els.recordList.innerHTML += html;
+  });
 }
 
-function deleteRecord(index) {
-  let input = prompt("请输入管理员密码：");
+// ====================== 【删除记录】 ======================
+async function deleteRecord(index) {
+  const input = prompt("请输入管理员密码：");
   if (input !== ADMIN_PASSWORD) {
     alert("密码错误，无法删除！");
     return;
   }
-  let list = getHistory();
+  const list = getHistory();
+  const recordToDelete = list[index];
+  // 如果删除的是当前使用中的记录，同步释放车辆
+  if (currentBorrow.inUse && currentBorrow.id === recordToDelete.id) {
+    updateCurrentBorrow({ inUse: false });
+  }
   list.splice(index, 1);
-  saveHistory(list);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   renderHistory(currentCarFilter);
+  renderPage();
   alert("删除成功");
 }
 
-function renderPage() {
-  let cur = getCurrent();
-  if (cur && cur.inUse) {
-    els.status.className = 'status in-use';
-    els.status.innerText = '使用中';
-    els.currentInfo.classList.remove('hide');
-    els.borrowArea.classList.add('hide');
-    els.returnArea.classList.remove('hide');
-    els.showCar.innerText = '车型：' + cur.carType;
-    els.showName.innerText = '姓名：' + cur.name;
-    els.showUse.innerText = '用途：' + cur.use;
-    els.showKm.innerText = '借车里程：' + cur.startKm + ' km';
-    els.showTime.innerText = '借车时间：' + cur.startTime;
-  } else {
-    els.status.className = 'status free';
-    els.status.innerText = '车辆空闲';
-    els.currentInfo.classList.add('hide');
-    els.borrowArea.classList.remove('hide');
-    els.returnArea.classList.add('hide');
-  }
-}
-
-function renderHistory(filter) {
-  currentCarFilter = filter;
-  let list = getHistory();
-  if (filter !== 'all') {
-    list = list.filter(item => item.carType === filter);
-  }
-  els.recordList.innerHTML = '';
-  if (list.length === 0) {
-    els.recordList.innerHTML = '<div class="empty-tip">暂无记录</div>';
-    return;
-  }
-  let html = '';
-  list.forEach((item, i) => {
-    let s = new Date(item.startTime);
-    let e = item.endTime ? new Date(item.endTime) : new Date();
-    let ms = e - s;
-    let h = Math.floor(ms / 3600000);
-    let m = Math.floor((ms % 3600000) / 60000);
-    let dur = h + '小时' + m + '分钟';
-    let usedKm = Number(item.endKm || 0) - Number(item.startKm || 0);
-
-    html += `
-    <div class="record-item">
-      <div>NO.${i+1} 车型：${item.carType}</div>
-      <div>使用者：${item.name}</div>
-      <div>用途：${item.use}</div>
-      <div>借车：${item.startTime}</div>
-      <div>还车：${item.endTime || '未归还'}</div>
-      <div>时长：${dur}</div>
-      <div style="color:#c8102f;font-weight:bold;">行驶里程：${usedKm} km</div>
-      <button class="del-btn" onclick="deleteRecord(${i})">删除</button>
-    </div>`;
-  });
-  els.recordList.innerHTML = html;
-}
-
-function openModal() {
-  renderHistory('all');
-  els.historyModal.classList.add('show');
-}
-function closeModal() {
-  els.historyModal.classList.remove('show');
-}
-
-function onStart() {
-  let car = els.carType.value.trim();
-  let name = els.name.value.trim();
-  let use = els.use.value.trim();
-  let km = els.startKm.value.trim();
+// ====================== 【借车逻辑】 ======================
+async function onStart() {
+  const car = els.carType.value.trim();
+  const name = els.name.value.trim();
+  const use = els.use.value.trim();
+  const km = els.startKm.value.trim();
 
   if (!car || !name || !use || !km) {
-    alert('请填写完整信息！');
+    alert("请填写完整信息！");
     return;
   }
 
-  setCurrent({
+  // 检查当前车辆是否被占用
+  const current = getCurrentBorrow();
+  if (current.inUse) {
+    alert(`当前${current.carType}正在使用中，请归还后再操作！`);
+    return;
+  }
+
+  const recordId = Date.now().toString();
+  const newBorrow = {
+    id: recordId,
     carType: car,
     name: name,
     use: use,
     startKm: km,
     startTime: now(),
     inUse: true
+  };
+
+  // 更新当前借车状态
+  updateCurrentBorrow(newBorrow);
+  // 添加历史记录
+  addHistory({
+    ...newBorrow,
+    endKm: "",
+    endTime: ""
   });
 
-  els.carType.value = '';
-  els.name.value = '';
-  els.use.value = '';
-  els.startKm.value = '';
+  // 清空输入
+  els.carType.value = "";
+  els.name.value = "";
+  els.use.value = "";
+  els.startKm.value = "";
 
   renderPage();
-  alert('借车成功！');
+  alert("借车成功！");
 }
 
-function onReturn() {
-  let km = els.endKm.value.trim();
-  if (!km) {
-    alert('请填写归还公里数');
+// ====================== 【还车逻辑】 ======================
+async function onReturn() {
+  const endKm = els.endKm.value.trim();
+  if (!endKm) {
+    alert("请填写还车公里数");
     return;
   }
-  let cur = getCurrent();
-  if (!cur) return;
+  if (!currentBorrow || !currentBorrow.inUse) {
+    alert("当前无车辆在借！");
+    return;
+  }
 
-  cur.endKm = km;
-  cur.endTime = now();
-  cur.inUse = false;
+  const endTime = now();
+  const mileage = endKm - currentBorrow.startKm;
 
-  addHistory(cur);
-  clearCurrent();
+  // 更新当前借车状态为空闲
+  updateCurrentBorrow({ inUse: false });
+  // 更新历史记录
+  updateHistory(currentBorrow.id, {
+    endKm: endKm,
+    endTime: endTime,
+    inUse: false
+  });
+
+  // 清空输入
+  els.endKm.value = "";
+
   renderPage();
-  alert('归还成功！');
+  alert("归还成功！");
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+// ====================== 【模态框控制】 ======================
+function openModal() {
+  renderHistory("all");
+  els.historyModal.classList.add("show");
+}
+
+function closeModal() {
+  els.historyModal.classList.remove("show");
+}
+
+// ====================== 【初始化】 ======================
+document.addEventListener("DOMContentLoaded", async function() {
   initEls();
+  initData();
+  await renderPage();
+
+  // 绑定事件
   els.startBtn.onclick = onStart;
   els.confirmReturn.onclick = onReturn;
   els.historyBtn.onclick = openModal;
   els.closeModalBtn.onclick = closeModal;
   els.backBtn.onclick = closeModal;
+
+  // 点击模态框外部关闭
   els.historyModal.onclick = (e) => {
     if (e.target === els.historyModal) closeModal();
   };
-  renderPage();
+
+  // 定时刷新页面状态（多设备同步）
+  setInterval(renderPage, 3000);
 });
 </script>
 </body>
