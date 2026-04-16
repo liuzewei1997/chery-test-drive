@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>奇瑞试驾统一登记系统</title>
+<title>奇瑞试驾登记系统</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family: "Microsoft YaHei",sans-serif}
   body{background:#f5f7fa;padding:15px}
   .main{max-width:420px;margin:0 auto;background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
-  .title{text-align:center;color:#c8102e;font-size:28px;margin-bottom:20px}
+  .title{text-align:center;color:#c8102e;font-size:28px;font-weight:bold;margin-bottom:20px}
   .status{padding:25px;border-radius:8px;text-align:center;font-size:26px;font-weight:bold;margin-bottom:20px}
-  .status.free{background:#e8f5e9;color:#2e7d32}
+  .status.free{background:#e8fbeb;color:#2e7d32}
   .status.in-use{background:#ffebee;color:#c8102e}
   .car-info{background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px;line-height:1.8;font-size:16px}
   input,button,select{width:100%;padding:14px;border-radius:8px;border:1px solid #ddd;margin:10px 0;font-size:16px}
-  button{background:#c8102e;color:#fff;border:none;font-weight:bold;cursor:pointer}
+  button{background:#c8102e;border:none;font-weight:bold;cursor:pointer;color:#fff}
   .hide{display:none !important}
-  .history-btn{position:fixed;bottom:25px;right:25px;width:60px;height:60px;border-radius:50%;background:#c8102e;color:#fff;font-size:26px;cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center}
+  .history-btn{position:fixed;bottom:25px;right:25px;width:60px;height:60px;border-radius:50%;background:#c8102e;color:#fff;font-size:26px;cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center;border:none}
   .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:200;display:none;align-items:center;justify-content:center}
   .modal.show{display:flex}
   .modal-card{background:#fff;width:90%;max-width:420px;border-radius:12px;max-height:80vh;overflow-y:auto;padding:20px}
@@ -31,14 +31,14 @@
   .back-btn{width:100%;padding:14px;background:#666;color:#fff;border:none;border-radius:8px;margin-top:15px}
   select option:disabled{background:#c8102e;color:#fff}
   .status-in-use{color:#2e7d32;font-weight:bold}
-  .status-unreturned{color:#c8102e;font-weight:bold}
+  .status-unreturn{color:#c8102e;font-weight:bold}
   .loading{text-align:center;padding:20px;color:#666}
 </style>
 </head>
 <body>
 
 <div class="main">
-  <h1 class="title">奇瑞试驾统一登记</h1>
+  <h1 class="title">奇瑞试驾登记</h1>
   <div id="status" class="status free">车辆全部空闲</div>
 
   <div id="currentInfo" class="car-info hide">
@@ -49,8 +49,8 @@
     <select id="carType">
       <option value="">请选择车型</option>
       <option value="瑞虎9">瑞虎9</option>
-      <option value="新瑞虎9">新瑞虎9</option>
-      <option value="第五代瑞虎8">第五代瑞虎8</option>
+      <option value="瑞虎8">瑞虎8</option>
+      <option value="风云A9L">风云A9L</option>
       <option value="艾瑞泽8">艾瑞泽8</option>
     </select>
 
@@ -62,7 +62,7 @@
 
   <div id="returnArea" class="hide">
     <select id="returnCarType">
-      <option value="">请选择要归还的车型</option>
+      <option value="">选择归还车型</option>
     </select>
     <input type="number" id="endKm" placeholder="还车公里数">
     <button id="confirmReturn">确认还车</button>
@@ -74,14 +74,14 @@
 <div class="modal" id="historyModal">
   <div class="modal-card">
     <div class="modal-header">
-      <h3>统一使用记录</h3>
+      <h3>试驾记录</h3>
       <button class="close-btn" id="closeModalBtn">×</button>
     </div>
     <div class="car-tab">
       <button onclick="renderHistory('all')">全部</button>
       <button onclick="renderHistory('瑞虎9')">瑞虎9</button>
-      <button onclick="renderHistory('新瑞虎9')">新瑞虎9</button>
-      <button onclick="renderHistory('第五代瑞虎8')">瑞虎8</button>
+      <button onclick="renderHistory('瑞虎8')">瑞虎8</button>
+      <button onclick="renderHistory('风云A9L')">风云A9L</button>
       <button onclick="renderHistory('艾瑞泽8')">艾瑞泽8</button>
     </div>
     <div id="recordList" class="loading">加载中...</div>
@@ -90,19 +90,18 @@
 </div>
 
 <script>
-// ====================== 【核心：云端数据存储，所有设备共享】 ======================
-// 使用免费的JSONBin.io作为云端数据库，所有设备读写同一份数据
-const BIN_ID = "661e8b8eacd3cb3f4d3b7a8c"; // 已创建好的公共数据桶，直接用
-const API_KEY = "$2a$10$Y5X9Z8X7Z6X5Z4X3Z2X1u8X7Z6X5Z4X3Z2X1Z6X5Z4X3Z2X1Z6X5Z4X3Z2X1"; // 访问密钥
+// ====================== 核心配置（已替换你的专属参数）======================
+const BIN_ID = "69e042ea856a6821893bb37d";
+const API_KEY = "$2a$10$hUu7g4RLt9KxAmgEt4B.tuuEw1W4kqkFIJ3NbjW2SWszRITlFWLIBi";
 const ADMIN_PASSWORD = "123456";
 
-// ====================== 【云端数据读写】 ======================
+// ====================== 云端数据读写 ======================
 async function fetchCloudData() {
   try {
     const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
       method: "GET",
       headers: {
-        "X-Master-Key": API_KEY,
+        "X-Access-Key": API_KEY,
         "Content-Type": "application/json"
       }
     });
@@ -120,7 +119,7 @@ async function updateCloudData(data) {
     await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
       method: "PUT",
       headers: {
-        "X-Master-Key": API_KEY,
+        "X-Access-Key": API_KEY,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(data)
@@ -133,7 +132,7 @@ async function updateCloudData(data) {
   }
 }
 
-// ====================== 【DOM元素】 ======================
+// ====================== DOM元素 ======================
 let els = {};
 let currentFilter = "all";
 let currentBorrows = {};
@@ -160,25 +159,29 @@ function initEls() {
   };
 }
 
-// ====================== 【工具函数】 ======================
+// ====================== 工具函数 ======================
 function now() {
   const d = new Date();
-  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,0);
-  const day = String(d.getDate()).padStart(2,0), h = String(d.getHours()).padStart(2,0);
-  const i = String(d.getMinutes()).padStart(2,0), s = String(d.getSeconds()).padStart(2,0);
-  return `${y}-${m}-${day} ${h}:${i}:${s}`;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
 }
 
 function calcDuration(start, end) {
   if (!end) return "使用中";
-  const st = new Date(start), en = new Date(end);
-  const ms = en - st;
+  const s = new Date(start);
+  const e = new Date(end);
+  const ms = e - s;
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
   return `${h}小时${m}分钟`;
 }
 
-// ====================== 【更新车辆选项】 ======================
+// ====================== 更新车辆选项 ======================
 function updateAllCarOptions(currentBorrows) {
   for (let i = 0; i < els.carType.options.length; i++) {
     const v = els.carType.options[i].value;
@@ -196,7 +199,7 @@ function updateAllCarOptions(currentBorrows) {
   });
 }
 
-// ====================== 【渲染主页面】 ======================
+// ====================== 渲染主页面 ======================
 async function renderPage() {
   const data = await fetchCloudData();
   currentBorrows = data.currentBorrows || {};
@@ -230,12 +233,14 @@ async function renderPage() {
   }
 }
 
-// ====================== 【渲染使用记录】 ======================
+// ====================== 渲染使用记录 ======================
 async function renderHistory(filter) {
   currentFilter = filter;
   const data = await fetchCloudData();
   let list = data.history || [];
-  if (filter !== "all") list = list.filter(item => item.carType === filter);
+  if (filter !== "all") {
+    list = list.filter(item => item.carType === filter);
+  }
 
   els.recordList.innerHTML = "";
   if (list.length === 0) {
@@ -243,27 +248,28 @@ async function renderHistory(filter) {
     return;
   }
 
+  let html = "";
   list.forEach((item, i) => {
     const dur = calcDuration(item.startTime, item.endTime);
     const endTxt = item.endTime || '<span class="status-in-use">使用中</span>';
-    const mile = item.endKm ? `${item.endKm - item.startKm} km` : '<span class="status-unreturned">未归还</span>';
+    const mile = item.endKm ? `${item.endKm - item.startKm} km` : '<span class="status-unreturn">未归还</span>';
 
-    const html = `
+    html += `
     <div class="record-item">
       <div>NO.${i+1} 车型：${item.carType}</div>
       <div>姓名：${item.name}</div>
       <div>用途：${item.use}</div>
       <div>借车：${item.startTime}</div>
       <div>还车：${endTxt}</div>
-      <div>时长：${dur}</div>
+      <div>使用时长：${dur}</div>
       <div style="color:#c8102e;font-weight:bold;">行驶里程：${mile}</div>
       <button class="del-btn" onclick="deleteRecord(${i})">删除本条</button>
     </div>`;
-    els.recordList.innerHTML += html;
   });
+  els.recordList.innerHTML = html;
 }
 
-// ====================== 【删除记录】 ======================
+// ====================== 删除记录 ======================
 async function deleteRecord(index) {
   const input = prompt("请输入管理员密码：");
   if (input !== ADMIN_PASSWORD) {
@@ -282,7 +288,7 @@ async function deleteRecord(index) {
   alert("删除成功");
 }
 
-// ====================== 【借车逻辑】 ======================
+// ====================== 借车逻辑 ======================
 async function onStart() {
   const car = els.carType.value.trim();
   const name = els.name.value.trim();
@@ -301,25 +307,26 @@ async function onStart() {
   }
 
   const id = Date.now().toString();
-  const newBorrow = {
+  const record = {
     id, carType: car, name, use,
     startKm: km, startTime: now(),
-    inUse: true
+    endKm: "", endTime: ""
   };
 
-  data.currentBorrows[car] = newBorrow;
-  data.history.unshift({
-    ...newBorrow,
-    endKm: "", endTime: ""
-  });
-
+  data.currentBorrows[car] = { id, carType: car, name, use, startKm: km, startTime: now() };
+  data.history.unshift(record);
   await updateCloudData(data);
-  els.carType.value = ""; els.name.value = ""; els.use.value = ""; els.startKm.value = "";
+
+  els.carType.value = "";
+  els.name.value = "";
+  els.use.value = "";
+  els.startKm.value = "";
+
   renderPage();
   alert("借车成功");
 }
 
-// ====================== 【还车逻辑】 ======================
+// ====================== 还车逻辑 ======================
 async function onReturn() {
   const car = els.returnCarType.value;
   const km = els.endKm.value.trim();
@@ -338,15 +345,15 @@ async function onReturn() {
   if (idx !== -1) {
     data.history[idx].endKm = km;
     data.history[idx].endTime = now();
-    data.history[idx].inUse = false;
   }
   await updateCloudData(data);
-  els.returnCarType.value = ""; els.endKm.value = "";
+  els.returnCarType.value = "";
+  els.endKm.value = "";
   renderPage();
   alert("还车成功");
 }
 
-// ====================== 【模态框控制】 ======================
+// ====================== 模态框控制 ======================
 async function openHistory() {
   await renderHistory("all");
   els.historyModal.classList.add("show");
@@ -356,7 +363,7 @@ function closeHistory() {
   els.historyModal.classList.remove("show");
 }
 
-// ====================== 【初始化】 ======================
+// ====================== 初始化 ======================
 document.addEventListener("DOMContentLoaded", async () => {
   initEls();
   await renderPage();
