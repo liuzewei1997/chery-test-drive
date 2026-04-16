@@ -37,6 +37,7 @@
   .loading-spinner{display:inline-block;width:20px;height:20px;border:3px solid #fff;border-radius:50%;border-top-color:transparent;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .error-tip{color:#c8102e;text-align:center;padding:10px}
+  .success-tip{color:#2e7d32;text-align:center;padding:10px}
 </style>
 </head>
 <body>
@@ -72,7 +73,7 @@
     <button id="confirmReturn">确认还车</button>
   </div>
 
-  <div id="errorTip" class="error-tip hide"></div>
+  <div id="tipArea"></div>
 </div>
 
 <button class="history-btn" id="historyBtn">📋</button>
@@ -100,8 +101,8 @@
 const BIN_ID = "69e042ea856a6821893bb37d";
 const API_KEY = "$2a$10$hUu7g4RLt9KxAmgEt4B.tuuEw1W4kqkFIJ3NbjW2SWszRITlFWLIBi";
 const ADMIN_PASSWORD = "123456";
-const FETCH_INTERVAL = 5000; // 5秒轮询（降低频率，减少延迟）
-const CACHE_KEY = "chery_car_cache"; // 本地缓存键
+const CACHE_KEY = "chery_car_cache";
+const MAX_RETRY = 2; // 最多重试2次
 
 // ====================== 全局状态 ======================
 let els = {};
@@ -109,7 +110,7 @@ let currentFilter = "all";
 let currentBorrows = {};
 let isLoading = false;
 
-// ====================== 本地缓存（解决延迟不同步）======================
+// ====================== 本地缓存（强制兜底）======================
 function saveToCache(data) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
@@ -119,21 +120,21 @@ function saveToCache(data) {
 function getFromCache() {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
-    return cached ? JSON.parse(cached) : null;
+    return cached ? JSON.parse(cached) : { currentBorrows: {}, history: [] };
   } catch (e) {
-    return null;
+    return { currentBorrows: {}, history: [] };
   }
 }
 
-// ====================== 云端数据读写（带超时、错误、重试）======================
-async function fetchCloudData() {
+// ====================== 云端数据读写（带重试、超时、乐观更新）======================
+async function fetchCloudData(retry = 0) {
   if (isLoading) return null;
   isLoading = true;
-  els.errorTip.classList.add("hide");
+  hideTip();
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000); // 8秒超时
+    const timeout = setTimeout(() => controller.abort(), 6000); // 6秒超时
 
     const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
       method: "GET",
@@ -150,29 +151,26 @@ async function fetchCloudData() {
     const data = await response.json();
     const result = data.record || { currentBorrows: {}, history: [] };
 
-    saveToCache(result); // 保存到本地缓存
+    saveToCache(result);
     return result;
   } catch (err) {
     console.error("获取云端数据失败:", err);
-    const cached = getFromCache(); // 读本地缓存
-    if (cached) {
-      els.errorTip.textContent = "网络异常，显示缓存数据";
-      els.errorTip.classList.remove("hide");
-      return cached;
-    } else {
-      els.errorTip.textContent = "数据加载失败，请重试";
-      els.errorTip.classList.remove("hide");
-      return { currentBorrows: {}, history: [] };
+    if (retry < MAX_RETRY) {
+      showTip(`网络异常，正在重试(${retry+1}/${MAX_RETRY})...`, "error");
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return fetchCloudData(retry + 1);
     }
+    showTip("网络异常，显示本地缓存", "error");
+    return getFromCache();
   } finally {
     isLoading = false;
   }
 }
 
-async function updateCloudData(data) {
+async function updateCloudData(data, retry = 0) {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 6000);
 
     await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
       method: "PUT",
@@ -189,8 +187,11 @@ async function updateCloudData(data) {
     return true;
   } catch (err) {
     console.error("更新云端数据失败:", err);
-    els.errorTip.textContent = "数据同步失败，请重试";
-    els.errorTip.classList.remove("hide");
+    if (retry < MAX_RETRY) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return updateCloudData(data, retry + 1);
+    }
+    showTip("数据同步失败，请稍后重试", "error");
     return false;
   }
 }
@@ -215,7 +216,7 @@ function initEls() {
     closeModalBtn: document.getElementById("closeModalBtn"),
     backBtn: document.getElementById("backBtn"),
     recordList: document.getElementById("recordList"),
-    errorTip: document.getElementById("errorTip")
+    tipArea: document.getElementById("tipArea")
   };
 }
 
@@ -239,6 +240,15 @@ function calcDuration(start, end) {
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
   return `${h}小时${m}分钟`;
+}
+
+function showTip(text, type = "success") {
+  els.tipArea.innerHTML = `<div class="${type === 'success' ? 'success-tip' : 'error-tip'}">${text}</div>`;
+  setTimeout(() => els.tipArea.innerHTML = "", 3000);
+}
+
+function hideTip() {
+  els.tipArea.innerHTML = "";
 }
 
 // ====================== 更新车辆选项 ======================
@@ -337,7 +347,7 @@ async function renderHistory(filter) {
 async function deleteRecord(index) {
   const input = prompt("请输入管理员密码：");
   if (input !== ADMIN_PASSWORD) {
-    alert("密码错误，无法删除");
+    showTip("密码错误，无法删除", "error");
     return;
   }
   const data = await fetchCloudData();
@@ -349,10 +359,10 @@ async function deleteRecord(index) {
   await updateCloudData(data);
   renderHistory(currentFilter);
   renderPage();
-  alert("删除成功");
+  showTip("删除成功", "success");
 }
 
-// ====================== 借车逻辑（成功立即刷新）======================
+// ====================== 借车逻辑（乐观更新+立即刷新）======================
 async function onStart() {
   const car = els.carType.value.trim();
   const name = els.name.value.trim();
@@ -360,16 +370,17 @@ async function onStart() {
   const km = els.startKm.value.trim();
 
   if (!car || !name || !use || !km) {
-    alert("请填写完整信息");
+    showTip("请填写完整信息", "error");
     return;
   }
 
   els.startBtn.disabled = true;
   els.startBtn.innerHTML = '<span class="loading-spinner"></span> 提交中...';
 
-  const data = await fetchCloudData();
+  // 1. 先本地乐观更新（立即显示，不管云端）
+  const data = getFromCache();
   if (data.currentBorrows[car]) {
-    alert("该车辆已被占用，无法借车");
+    showTip("该车辆已被占用", "error");
     els.startBtn.disabled = false;
     els.startBtn.textContent = "确认借车";
     return;
@@ -384,36 +395,45 @@ async function onStart() {
 
   data.currentBorrows[car] = { id, carType: car, name, use, startKm: km, startTime: now() };
   data.history.unshift(record);
+  saveToCache(data);
 
-  const success = await updateCloudData(data);
-  if (success) {
-    els.carType.value = "";
-    els.name.value = "";
-    els.use.value = "";
-    els.startKm.value = "";
-    renderPage(); // 立即刷新界面
-    alert("借车成功");
-  }
+  // 2. 立即刷新界面（关键！）
+  renderPage();
+  showTip("借车成功", "success");
+
+  // 3. 后台同步云端（不阻塞）
+  updateCloudData(data).then(success => {
+    if (!success) {
+      showTip("云端同步失败，已保存本地", "error");
+    }
+  });
+
+  // 4. 清空表单
+  els.carType.value = "";
+  els.name.value = "";
+  els.use.value = "";
+  els.startKm.value = "";
 
   els.startBtn.disabled = false;
   els.startBtn.textContent = "确认借车";
 }
 
-// ====================== 还车逻辑（成功立即刷新）======================
+// ====================== 还车逻辑（乐观更新+立即刷新）======================
 async function onReturn() {
   const car = els.returnCarType.value;
   const km = els.endKm.value.trim();
   if (!car || !km) {
-    alert("请选择车辆并填写还车公里数");
+    showTip("请选择车辆并填写还车公里数", "error");
     return;
   }
 
   els.confirmReturn.disabled = true;
   els.confirmReturn.innerHTML = '<span class="loading-spinner"></span> 提交中...';
 
-  const data = await fetchCloudData();
+  // 1. 先本地乐观更新
+  const data = getFromCache();
   if (!data.currentBorrows[car]) {
-    alert("该车辆未在使用");
+    showTip("该车辆未在使用", "error");
     els.confirmReturn.disabled = false;
     els.confirmReturn.textContent = "确认还车";
     return;
@@ -426,14 +446,22 @@ async function onReturn() {
     data.history[idx].endKm = km;
     data.history[idx].endTime = now();
   }
+  saveToCache(data);
 
-  const success = await updateCloudData(data);
-  if (success) {
-    els.returnCarType.value = "";
-    els.endKm.value = "";
-    renderPage(); // 立即刷新界面
-    alert("还车成功");
-  }
+  // 2. 立即刷新界面（关键！）
+  renderPage();
+  showTip("还车成功", "success");
+
+  // 3. 后台同步云端
+  updateCloudData(data).then(success => {
+    if (!success) {
+      showTip("云端同步失败，已保存本地", "error");
+    }
+  });
+
+  // 4. 清空表单
+  els.returnCarType.value = "";
+  els.endKm.value = "";
 
   els.confirmReturn.disabled = false;
   els.confirmReturn.textContent = "确认还车";
@@ -460,15 +488,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   els.closeModalBtn.addEventListener("click", closeHistory);
   els.backBtn.addEventListener("click", closeHistory);
 
-  // 5秒自动刷新（降低频率，减少延迟）
-  setInterval(renderPage, FETCH_INTERVAL);
+  // 3秒自动刷新（保证多设备同步）
+  setInterval(renderPage, 3000);
   setInterval(() => {
     if (els.historyModal.classList.contains("show")) {
       renderHistory(currentFilter);
     }
-  }, FETCH_INTERVAL);
+  }, 3000);
 });
 </script>
 </body>
 </html>
-
