@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>奇瑞试驾统一登记</title>
+<title>奇瑞试驾登记系统</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family: "Microsoft YaHei",sans-serif}
   body{background:#f5f7fa;padding:15px}
@@ -27,7 +27,7 @@
   .car-tab button{margin:0;padding:8px 6px;font-size:12px;width:auto}
   .record-item{padding:15px 10px;border-bottom:1px solid #eee;line-height:1.8}
   .empty-tip{text-align:center;padding:20px;color:#999}
-  .del-btn{background:#ff4444;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:14px;margin-top:8px}
+  .del-btn{background:#ff4444;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:14px;margin-top:8px;width:100%}
   .back-btn{width:100%;padding:14px;background:#666;color:#fff;border:none;border-radius:8px;margin-top:15px}
   select option:disabled{background:#c8102e;color:#fff}
   .status-in-use{color:#2e7d32;font-weight:bold}
@@ -37,7 +37,7 @@
 <body>
 
 <div class="main">
-  <h1 class="title">奇瑞试驾统一登记</h1>
+  <h1 class="title">奇瑞试驾登记</h1>
   <div id="status" class="status free">车辆全部空闲</div>
 
   <div id="currentInfo" class="car-info hide">
@@ -73,7 +73,7 @@
 <div class="modal" id="historyModal">
   <div class="modal-card">
     <div class="modal-header">
-      <h3>统一使用记录</h3>
+      <h3>试驾记录</h3>
       <button class="close-btn" id="closeModalBtn">×</button>
     </div>
     <div class="car-tab">
@@ -89,15 +89,13 @@
 </div>
 
 <script>
-// 全局统一数据 ID（所有人共用一份数据）
-const DB_KEY = "chery_global_drive_data";
-const ADMIN_PASSWORD = "123456";
+const DB_KEY = "chery_test_drive_global";
+const ADMIN_PWD = "123456";
 
-// 读写全局统一数据
 function getData() {
   try {
-    let s = localStorage.getItem(DB_KEY);
-    return s ? JSON.parse(s) : { current: {}, history: [] };
+    const str = localStorage.getItem(DB_KEY);
+    return str ? JSON.parse(str) : { current: {}, history: [] };
   } catch (e) {
     return { current: {}, history: [] };
   }
@@ -108,23 +106,21 @@ function saveData(data) {
   window.dispatchEvent(new Event("storage"));
 }
 
-// DOM
 let els = {};
 let currentFilter = "all";
 
-function initEl() {
+function initEls() {
   els = {
     status: document.getElementById("status"),
     currentInfo: document.getElementById("currentInfo"),
     showCarList: document.getElementById("showCarList"),
-    borrowArea: document.getElementById("borrowArea"),
-    returnArea: document.getElementById("returnArea"),
     carType: document.getElementById("carType"),
-    returnCarType: document.getElementById("returnCarType"),
     name: document.getElementById("name"),
     use: document.getElementById("use"),
     startKm: document.getElementById("startKm"),
     startBtn: document.getElementById("startBtn"),
+    returnArea: document.getElementById("returnArea"),
+    returnCarType: document.getElementById("returnCarType"),
     endKm: document.getElementById("endKm"),
     confirmReturn: document.getElementById("confirmReturn"),
     historyBtn: document.getElementById("historyBtn"),
@@ -135,46 +131,46 @@ function initEl() {
   };
 }
 
-// 时间
 function now() {
   const d = new Date();
-  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,0);
-  const dd = String(d.getDate()).padStart(2,0), h = String(d.getHours()).padStart(2,0);
-  const i = String(d.getMinutes()).padStart(2,0), s = String(d.getSeconds()).padStart(2,0);
-  return `${y}-${m}-${dd} ${h}:${i}:${s}`;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
 }
 
-// 时长
 function duration(start, end) {
   if (!end) return "使用中";
-  let st = new Date(start), en = new Date(end);
-  let ms = en - st;
-  let h = Math.floor(ms / 3600000);
-  let m = Math.floor((ms % 3600000) / 60000);
+  const s = new Date(start);
+  const e = new Date(end);
+  const ms = e - s;
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
   return `${h}小时${m}分钟`;
 }
 
-// 更新车辆选项禁用状态
 function syncCarOptions(current) {
   for (let i = 0; i < els.carType.options.length; i++) {
-    let v = els.carType.options[i].value;
+    const v = els.carType.options[i].value;
     if (!v) continue;
     els.carType.options[i].disabled = !!current[v];
   }
   els.returnCarType.innerHTML = '<option value="">选择归还车型</option>';
   Object.keys(current).forEach(c => {
-    let opt = document.createElement("option");
+    const opt = document.createElement("option");
     opt.value = c;
     opt.textContent = c;
     els.returnCarType.appendChild(opt);
   });
 }
 
-// 刷新页面
 function refresh() {
-  let d = getData();
-  let current = d.current || {};
-  let using = Object.keys(current).filter(k => current[k]);
+  const data = getData();
+  const current = data.current || {};
+  const using = Object.keys(current).filter(k => current[k]);
 
   syncCarOptions(current);
 
@@ -184,13 +180,14 @@ function refresh() {
     els.currentInfo.classList.remove("hide");
     let html = "";
     using.forEach(c => {
-      let b = current[c];
-      html += `<div style="padding:10px;background:#f1f1f1;border-radius:8px;margin-bottom:10px">
+      const b = current[c];
+      html += `
+      <div style="padding:10px;background:#f1f1f1;border-radius:8px;margin-bottom:10px">
         <div>车型：${c}</div>
         <div>使用人：${b.name}</div>
         <div>用途：${b.use}</div>
-        <div>里程：${b.startKm} km</div>
-        <div>时间：${b.startTime}</div>
+        <div>借车里程：${b.startKm} km</div>
+        <div>借车时间：${b.startTime}</div>
       </div>`;
     });
     els.showCarList.innerHTML = html;
@@ -203,100 +200,140 @@ function refresh() {
   }
 }
 
-// 记录列表
 function renderHistory(filter) {
   currentFilter = filter;
-  let d = getData();
-  let list = d.history || [];
-  if (filter !== "all") list = list.filter(x => x.carType === filter);
+  const data = getData();
+  let list = data.history || [];
+  if (filter !== "all") {
+    list = list.filter(item => item.carType === filter);
+  }
   els.recordList.innerHTML = "";
-  if (list.length === 0) { els.recordList.innerHTML = '<div class="empty-tip">暂无记录</div>'; return; }
+  if (list.length === 0) {
+    els.recordList.innerHTML = '<div class="empty-tip">暂无记录</div>';
+    return;
+  }
   let html = "";
   list.forEach((item, i) => {
-    let dur = duration(item.startTime, item.endTime);
-    let endTxt = item.endTime || '<span class="status-in-use">使用中</span>';
-    let mile = item.endKm ? (item.endKm - item.startKm) + " km" : '<span class="status-unreturned">未归还</span>';
-    html += `<div class="record-item">
+    const dur = duration(item.startTime, item.endTime);
+    const endTxt = item.endTime || '<span class="status-in-use">使用中</span>';
+    const mile = item.endKm ? `${item.endKm - item.startKm} km` : '<span class="status-unreturned">未归还</span>';
+    html += `
+    <div class="record-item">
       <div>NO.${i+1} 车型：${item.carType}</div>
       <div>姓名：${item.name}</div>
       <div>用途：${item.use}</div>
       <div>借车：${item.startTime}</div>
       <div>还车：${endTxt}</div>
       <div>时长：${dur}</div>
-      <div style="color:#c8102e;font-weight:bold;">里程：${mile}</div>
-      <button class="del-btn" onclick="del(${i})">删除本条</button>
+      <div style="color:#c8102e;font-weight:bold;">行驶里程：${mile}</div>
+      <button class="del-btn" onclick="delRecord(${i})">删除本条</button>
     </div>`;
   });
   els.recordList.innerHTML = html;
 }
 
-// 删除
-function del(index) {
-  let p = prompt("请输入管理员密码：");
-  if (p !== ADMIN_PASSWORD) { alert("密码错误"); return; }
-  let d = getData();
-  let item = d.history[index];
-  if (d.current[item.carType]?.id === item.id) delete d.current[item.carType];
-  d.history.splice(index, 1);
-  saveData(d);
+function delRecord(index) {
+  const input = prompt("请输入管理员密码：");
+  if (input !== ADMIN_PWD) {
+    alert("密码错误");
+    return;
+  }
+  const data = getData();
+  const item = data.history[index];
+  if (data.current[item.carType]?.id === item.id) {
+    delete data.current[item.carType];
+  }
+  data.history.splice(index, 1);
+  saveData(data);
   renderHistory(currentFilter);
   refresh();
 }
 
-// 借车
 function borrow() {
-  let car = els.carType.value.trim();
-  let name = els.name.value.trim();
-  let use = els.use.value.trim();
-  let km = els.startKm.value.trim();
-  if (!car || !name || !use || !km) { alert("请填写完整"); return; }
-  let d = getData();
-  if (d.current[car]) { alert("该车已被占用"); return; }
-  let id = Date.now().toString();
-  d.current[car] = { id, carType: car, name, use, startKm: km, startTime: now() };
-  d.history.unshift({ id, carType: car, name, use, startKm: km, startTime: now(), endKm: "", endTime: "" });
-  saveData(d);
-  els.carType.value = ""; els.name.value = ""; els.use.value = ""; els.startKm.value = "";
+  const car = els.carType.value.trim();
+  const name = els.name.value.trim();
+  const use = els.use.value.trim();
+  const km = els.startKm.value.trim();
+
+  if (!car || !name || !use || !km) {
+    alert("请填写完整信息");
+    return;
+  }
+
+  const data = getData();
+  if (data.current[car]) {
+    alert("该车辆已被占用，无法借车");
+    return;
+  }
+
+  const id = Date.now().toString();
+  const record = {
+    id, carType: car, name, use,
+    startKm: km, startTime: now(),
+    endKm: "", endTime: ""
+  };
+
+  data.current[car] = { id, carType: car, name, use, startKm: km, startTime: now() };
+  data.history.unshift(record);
+  saveData(data);
+
+  els.carType.value = "";
+  els.name.value = "";
+  els.use.value = "";
+  els.startKm.value = "";
+
   refresh();
   alert("借车成功");
 }
 
-// 还车
 function giveBack() {
-  let car = els.returnCarType.value;
-  let km = els.endKm.value.trim();
-  if (!car || !km) { alert("请选择车辆并填写公里数"); return; }
-  let d = getData();
-  if (!d.current[car]) { alert("车辆未在使用"); return; }
-  let item = d.current[car];
-  delete d.current[car];
-  let idx = d.history.findIndex(x => x.id === item.id);
-  if (idx !== -1) {
-    d.history[idx].endKm = km;
-    d.history[idx].endTime = now();
+  const car = els.returnCarType.value;
+  const km = els.endKm.value.trim();
+  if (!car || !km) {
+    alert("请选择车辆并填写还车公里数");
+    return;
   }
-  saveData(d);
-  els.returnCarType.value = ""; els.endKm.value = "";
+  const data = getData();
+  if (!data.current[car]) {
+    alert("该车辆未在使用");
+    return;
+  }
+  const borrow = data.current[car];
+  delete data.current[car];
+  const idx = data.history.findIndex(h => h.id === borrow.id);
+  if (idx !== -1) {
+    data.history[idx].endKm = km;
+    data.history[idx].endTime = now();
+  }
+  saveData(data);
+  els.returnCarType.value = "";
+  els.endKm.value = "";
   refresh();
   alert("还车成功");
 }
 
-// 模态框
-function openHistory() { renderHistory("all"); els.historyModal.classList.add("show"); }
-function closeHistory() { els.historyModal.classList.remove("show"); }
+function openHistory() {
+  renderHistory("all");
+  els.historyModal.classList.add("show");
+}
 
-// 启动
-window.onload = function() {
-  initEl();
+function closeHistory() {
+  els.historyModal.classList.remove("show");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initEls();
   refresh();
-  els.startBtn.onclick = borrow;
-  els.confirmReturn.onclick = giveBack;
-  els.historyBtn.onclick = openHistory;
-  els.closeModalBtn.onclick = closeHistory;
-  els.backBtn.onclick = closeHistory;
+
+  els.startBtn.addEventListener("click", borrow);
+  els.confirmReturn.addEventListener("click", giveBack);
+  els.historyBtn.addEventListener("click", openHistory);
+  els.closeModalBtn.addEventListener("click", closeHistory);
+  els.backBtn.addEventListener("click", closeHistory);
+
   setInterval(refresh, 3000);
   window.addEventListener("storage", refresh);
-};
+});
 </script>
 </body>
 </html>
